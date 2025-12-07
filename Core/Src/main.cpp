@@ -90,7 +90,7 @@ int main(void)
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
-  power::ShutdownMode* low_power_mode = new power::ShutdownMode(WAKEUP_PIN_GPIO_Port, WAKEUP_PIN_Pin, false);
+  power::STOP2Mode* low_power_mode = new power::STOP2Mode(USER_WAKEUP_GPIO_Port, USER_WAKEUP_Pin, false);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,7 +100,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_Delay(5000); //Delay can vary based on how long it takes for the signal to settle.
+	  HAL_Delay(1000); //Delay can vary based on how long it takes for the signal to settle.
 	  const char user_prompt[] = "\r\nWaking Up!\r\n";
 	  HAL_UART_Transmit(&huart4, (uint8_t*)user_prompt, sizeof(user_prompt), HAL_MAX_DELAY);
 	  low_power_mode->enter_low_power_mode();
