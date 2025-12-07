@@ -20,7 +20,7 @@
 #include "main.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <cassert>
+#include "low_power_modes.hpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,126 +50,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
-class LowPowerModes
-{
-protected:
-	GPIO_TypeDef* GPIO_Port;
-	uint16_t GPIO_Pin;
-	bool wakeup_on_falling_edge;
-public:
-	LowPowerModes(GPIO_TypeDef  *_GPIOx, uint16_t _GPIO_Pin, bool _wakeup_on_falling_edge)
-	:
-		GPIO_Port(_GPIOx),
-		GPIO_Pin(_GPIO_Pin),
-		wakeup_on_falling_edge(_wakeup_on_falling_edge)
-	{}
-
-	virtual void enter_low_power_mode(void) = 0;
-	virtual void exit_low_power_mode(void) = 0;
-
-	virtual ~LowPowerModes() = default;
-};
-
-class STOP2Mode : public LowPowerModes
-{
-public:
-	STOP2Mode(GPIO_TypeDef  *_GPIOx, uint16_t _GPIO_Pin, bool _wakeup_on_falling_edge) : LowPowerModes(_GPIOx, _GPIO_Pin,  _wakeup_on_falling_edge) {
-	  //TODO: Make it configurable for any pin
-	  assert(_GPIOx == WAKEUP_PIN_GPIO_Port);
-	  assert(_GPIO_Pin == WAKEUP_PIN_Pin);
-
-	  /*Configure GPIO pin : WAKEUP_PIN_Pin */
-	  GPIO_InitTypeDef GPIO_InitStruct = {0};
-	  GPIO_InitStruct.Pin = WAKEUP_PIN_Pin;
-	  if(this->wakeup_on_falling_edge)
-		  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-	  else
-		  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(WAKEUP_PIN_GPIO_Port, &GPIO_InitStruct);
-	}
-
-	~STOP2Mode() = default;
-
-	void enter_low_power_mode(void) override
-	{
-		SysTick->CTRL &= ~(SysTick_CTRL_ENABLE_Msk << SysTick_CTRL_ENABLE_Pos); //disable systick
-	    HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-	    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-	    __HAL_GPIO_EXTI_CLEAR_IT(this->GPIO_Pin);
-		/*TODO:Disable any further interrupts here, except the pin interrupt intended to wake-up the processor*/
-		HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-	}
-
-	void exit_low_power_mode(void) override
-	{
-		SysTick->CTRL |= (SysTick_CTRL_ENABLE_Msk << SysTick_CTRL_ENABLE_Pos); //enable systick
-		SystemClock_Config();
-	    HAL_NVIC_DisableIRQ(EXTI0_IRQn);
-		/*TODO:Enable any further interrupts here*/
-	}
-};
-
-class StandbyMode : public LowPowerModes
-{
-public:
-	StandbyMode(GPIO_TypeDef  *_GPIOx, uint16_t _GPIO_Pin, bool _wakeup_on_falling_edge) : LowPowerModes(_GPIOx, _GPIO_Pin,  _wakeup_on_falling_edge)
-	{
-		//TODO: Make it for all of the wake-up pins
-		if((PWR->SR1) & PWR_SR1_SBF)
-		{
-			const char display_message[] = "\r\nWaking up from Standby Mode!\r\n";
-			HAL_UART_Transmit(&huart4, (const uint8_t*)display_message, sizeof(display_message)/sizeof(char), HAL_MAX_DELAY);
-			PWR->SCR |= PWR_SCR_CSBF; //clear flag
-		}
-	};
-	~StandbyMode() = default;
-
-	void enter_low_power_mode(void) override
-	{
-		HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN1);
-		if(this->wakeup_on_falling_edge)
-		{
-			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1_HIGH);
-		}
-		else
-		{
-			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1_LOW);
-		}
-		//Clear the flag!
-		PWR->SCR |= PWR_SCR_CWUF1;
-		HAL_PWR_EnterSTANDBYMode();
-	}
-
-	void exit_low_power_mode(void) override {}; //Nothing to do here since the processor is reset, but with the standby mode enabled.
-};
-
-
-class ShutdownMode : public LowPowerModes
-{
-public:
-	ShutdownMode(GPIO_TypeDef  *_GPIOx, uint16_t _GPIO_Pin, bool _wakeup_on_falling_edge) : LowPowerModes(_GPIOx, _GPIO_Pin,  _wakeup_on_falling_edge) {};
-	~ShutdownMode() = default;
-
-	void enter_low_power_mode(void) override
-	{
-		HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN1);
-		if(this->wakeup_on_falling_edge)
-		{
-			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1_HIGH);
-		}
-		else
-		{
-			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1_LOW);
-		}
-		//Clear the flag!
-		PWR->SCR |= PWR_SCR_CWUF1;
-		HAL_PWREx_EnterSHUTDOWNMode();
-	}
-
-	void exit_low_power_mode(void) override {}; //Nothing to do here since the processor is reset.
-};
 
 /* USER CODE END PFP */
 
@@ -210,7 +90,7 @@ int main(void)
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
-  ShutdownMode* low_power_mode = new ShutdownMode(WAKEUP_PIN_GPIO_Port, WAKEUP_PIN_Pin, false);
+  power::ShutdownMode* low_power_mode = new power::ShutdownMode(WAKEUP_PIN_GPIO_Port, WAKEUP_PIN_Pin, false);
   /* USER CODE END 2 */
 
   /* Infinite loop */
