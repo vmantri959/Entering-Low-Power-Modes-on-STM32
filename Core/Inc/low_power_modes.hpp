@@ -16,6 +16,7 @@ namespace power {
 			GPIO_TypeDef* GPIO_Port;
 			uint16_t GPIO_Pin;
 			bool wakeup_on_falling_edge;
+			void configure_wakeup_pin(uint32_t wakeup_pin);
 		public:
 			LowPowerModes(GPIO_TypeDef  *_GPIOx, uint16_t _GPIO_Pin, bool _wakeup_on_falling_edge);
 			virtual void enter_low_power_mode(void) = 0;
