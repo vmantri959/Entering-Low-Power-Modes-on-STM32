@@ -18,9 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "low_power_modes.hpp"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -30,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SHUTDOWN
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,7 +47,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void MX_GPIO_Init(void);
+static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -86,19 +87,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  for(int i = 0; i < 5; i++)
-  {
-	  HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-	  HAL_Delay(500);
-  }
 
-#if defined(STOP2)
-  power::STOP2Mode low_power_mode(USER_WAKEUP_GPIO_Port, USER_WAKEUP_Pin, false);
-#elif defined(STANDBY)
-  power::StandbyMode low_power_mode(USER_WAKEUP_GPIO_Port, USER_WAKEUP_Pin, false);
-#elif defined(SHUTDOWN)
-  power::ShutdownMode low_power_mode(USER_WAKEUP_GPIO_Port, USER_WAKEUP_Pin, false);
-#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,15 +97,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_Delay(500); //Delay can vary based on how long it takes for the signal to settle.
-	  for(int i = 0; i < 5; i++)
-	  {
-		  HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
-		  HAL_Delay(500);
-	  }
-
-	  low_power_mode.enter_low_power_mode();
-	  low_power_mode.exit_low_power_mode();
   }
   /* USER CODE END 3 */
 }
@@ -170,60 +150,63 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-void MX_GPIO_Init(void)
+static void MX_GPIO_Init(void)
 {
-	  GPIO_InitTypeDef GPIO_InitStruct = {0};
-	  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
 
-	  /* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
-	  /* GPIO Ports Clock Enable */
-	  __HAL_RCC_GPIOG_CLK_ENABLE();
-	  HAL_PWREx_EnableVddIO2();
-	  __HAL_RCC_GPIOD_CLK_ENABLE();
-	  __HAL_RCC_GPIOA_CLK_ENABLE();
-	  __HAL_RCC_GPIOF_CLK_ENABLE();
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  HAL_PWREx_EnableVddIO2();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
-	  /*Configure GPIO pin Output Level */
-	  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_RESET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_RESET);
 
-	  /*Configure GPIO pin Output Level */
-	  HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
 
-	  /*Configure GPIO pin Output Level */
-	  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_SET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_SET);
 
-	  /*Configure GPIO pin : LED_GREEN_Pin */
-	  GPIO_InitStruct.Pin = LED_GREEN_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin : LED_GREEN_Pin */
+  GPIO_InitStruct.Pin = LED_GREEN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
 
-	  /*Configure GPIO pin : LED_RED_Pin */
-	  GPIO_InitStruct.Pin = LED_RED_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init(LED_RED_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin : LED_RED_Pin */
+  GPIO_InitStruct.Pin = LED_RED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED_RED_GPIO_Port, &GPIO_InitStruct);
 
-	  /*Configure GPIO pin : USER_WAKEUP_Pin */
-	  GPIO_InitStruct.Pin = USER_WAKEUP_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-	  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	  HAL_GPIO_Init(USER_WAKEUP_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin : USER_WAKEUP_Pin */
+  GPIO_InitStruct.Pin = USER_WAKEUP_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(USER_WAKEUP_GPIO_Port, &GPIO_InitStruct);
 
-	  /*Configure GPIO pins : PF11 PF12 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+  /*Configure GPIO pins : PF11 PF12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-	  /* EXTI interrupt init*/
-	  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-	  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
