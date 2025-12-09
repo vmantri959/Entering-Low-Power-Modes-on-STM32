@@ -57,9 +57,13 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define WAKEUP_PIN_Pin GPIO_PIN_0
-#define WAKEUP_PIN_GPIO_Port GPIOA
-#define WAKEUP_PIN_EXTI_IRQn EXTI0_IRQn
+#define LED_GREEN_Pin GPIO_PIN_12
+#define LED_GREEN_GPIO_Port GPIOG
+#define LED_RED_Pin GPIO_PIN_3
+#define LED_RED_GPIO_Port GPIOD
+#define USER_WAKEUP_Pin GPIO_PIN_0
+#define USER_WAKEUP_GPIO_Port GPIOA
+#define USER_WAKEUP_EXTI_IRQn EXTI0_IRQn
 
 /* USER CODE BEGIN Private defines */
 
